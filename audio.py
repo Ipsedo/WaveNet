@@ -68,7 +68,9 @@ class WavDataset(th_data.TensorDataset):
             sample_length: int,
             progress_bar: bool = True
     ):
-        sample_nb = _get_sample_number(wav_paths, sample_rate, sample_length, progress_bar)
+        sample_nb = _get_sample_number(
+            wav_paths, sample_rate, sample_length + 1, progress_bar
+        )
 
         x = th.empty(sample_nb, 1, sample_length)
         y = th.empty(sample_nb, sample_length, dtype=th.long)
@@ -80,19 +82,22 @@ class WavDataset(th_data.TensorDataset):
         for w_p in progress:
             raw_audio = _read_wav(w_p, sample_rate)
 
-            to_keep = raw_audio.size(0) - raw_audio.size(0) % sample_length
+            to_keep = raw_audio.size(0) - \
+                      raw_audio.size(0) % (sample_length + 1)
 
             raw_audio = raw_audio[:to_keep, :].mean(dim=-1) \
                 if len(raw_audio.size()) > 1 \
                 else raw_audio[:to_keep]
 
-            samples = th.stack(raw_audio.split(sample_length, dim=0), dim=0)
+            samples = th.stack(raw_audio.split(sample_length + 1, dim=0), dim=0)
 
-            curr_x = mu_encode(samples, n_class)
-            curr_y = quantize(curr_x, n_class)
+            samples = mu_encode(samples, n_class)
+
+            curr_x = samples[:, :-1]
+            curr_y = quantize(samples, n_class)[:, 1:]
 
             x[sample_idx:sample_idx + curr_x.size(0), 0, :] = curr_x
-            y[sample_idx:sample_idx + curr_x.size(0), :] = curr_y
+            y[sample_idx:sample_idx + curr_y.size(0), :] = curr_y
 
             sample_idx += curr_x.size(0)
 
@@ -114,8 +119,15 @@ if __name__ == '__main__':
     print(d_q_x)
 
     musics = [
-       "/home/samuel/Documents/WaveNet/res/test_16000Hz/sonne_16000Hz.wav",
-       "/home/samuel/Documents/WaveNet/res/test_16000Hz/links_16000Hz.wav"
+        "/home/samuel/Documents/WaveNet/res/test_16000Hz/01 satie - musiques intimes et secretes - nostalgie.flac"
     ]
 
     dataset = WavDataset(musics, 256, 16000, 32000, progress_bar=True)
+
+    x, y = dataset[2]
+
+    print(x.size())
+    print(y.size())
+
+    print(x[0, :20])
+    print(de_quantize(y[:20], 256))
