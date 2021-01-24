@@ -50,16 +50,17 @@ def main() -> None:
 
             tqdm_bar.set_description(f"Epoch {e}, loss = {loss.item()}")
 
-        n_sec_gen = 2
-        n_sample = 16000 * n_sec_gen
-        init = th.rand(100).cuda() * 2. - 1.
+        with th.no_grad():
+            n_sec_gen = 2
+            n_sample = 16000 * n_sec_gen
+            init = th.rand(100).cuda() * 2. - 1.
 
-        generated_sound = generate_from(wavenet, n_sample, init)
+            generated_sound = generate_from(wavenet, n_sample, init).cpu()
 
-        to_wav(
-            generated_sound.numpy(),
-            16000, f"./res/gen_epoch_{e}.wav"
-        )
+            to_wav(
+                generated_sound.numpy(),
+                16000, f"./res/gen_epoch_{e}.wav"
+            )
 
 
 if __name__ == '__main__':
