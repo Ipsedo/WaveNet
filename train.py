@@ -17,6 +17,7 @@ import argparse
 def main() -> None:
     parser = argparse.ArgumentParser("Train WaveNet")
 
+    parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--n-class", type=int, default=128)
     parser.add_argument("--n-block", type=int, default=2)
     parser.add_argument("--n-layer", type=int, default=8)
@@ -55,7 +56,7 @@ def main() -> None:
     )
 
     data_loader = DataLoader(
-        data_set, batch_size=4, shuffle=True
+        data_set, batch_size=args.batch_size, shuffle=True
     )
 
     nb_epoch = 10
