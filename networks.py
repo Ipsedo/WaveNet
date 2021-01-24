@@ -80,8 +80,8 @@ class ResidualSkipConnections(nn.Module):
 class WaveNet(nn.Module):
     def __init__(
             self, num_block: int, num_layer: int,
-            in_channels: int, hidden_channels: int,
-            n_class: int
+            in_channels: int, residual_channel: int,
+            hidden_channel: int, n_class: int
     ):
         super(WaveNet, self).__init__()
 
@@ -94,19 +94,19 @@ class WaveNet(nn.Module):
                 self.__layers.append(
                     ResidualSkipConnections(
                         in_channels if (b_idx == 0) & (l_idx == 0)
-                        else hidden_channels,
-                        hidden_channels,
+                        else residual_channel,
+                        residual_channel,
                         2, dilation=2 ** l_idx
                     )
                 )
 
         self.__conv1 = nn.Conv1d(
-            hidden_channels, hidden_channels,
+            residual_channel, hidden_channel,
             kernel_size=1, padding=0, dilation=1
         )
 
         self.__conv2 = nn.Conv1d(
-            hidden_channels, n_class,
+            hidden_channel, n_class,
             kernel_size=1, padding=0, dilation=1
         )
 
