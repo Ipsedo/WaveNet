@@ -23,6 +23,10 @@ def mu_encode(x: th.Tensor, mu: int) -> th.Tensor:
            th.log(th.tensor(1. + mu).to(x.device))
 
 
+def mu_decode(x: th.Tensor, mu: int) -> th.Tensor:
+    return th.sign(x) * (1. / mu) * ((1. + mu) ** th.abs(x) - 1.)
+
+
 def to_wav(raw_audio: th.Tensor, sample_rate: int, out_file: str) -> None:
     sf.write(out_file, raw_audio, sample_rate)
 
