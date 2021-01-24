@@ -18,12 +18,15 @@ def main() -> None:
     parser = argparse.ArgumentParser("Train WaveNet")
 
     parser.add_argument("--batch-size", type=int, default=4)
+
     parser.add_argument("--n-class", type=int, default=128)
     parser.add_argument("--n-block", type=int, default=2)
     parser.add_argument("--n-layer", type=int, default=8)
     parser.add_argument("--hidden-channel", type=int, default=64)
+
     parser.add_argument("--sample-rate", type=int, default=16000)
     parser.add_argument("--sample-length", type=int, default=32000)
+
     parser.add_argument("--generate", type=bool, default=True)
 
     parser.add_argument("audio_files", type=str)
@@ -88,9 +91,9 @@ def main() -> None:
 
         if args.generate:
             with th.no_grad():
-                n_sec_gen = 10
+                n_sec_gen = 3
                 n_sample = sample_rate * n_sec_gen
-                init = th.rand(1024).cuda() * 2. - 1.
+                init = th.rand(4096).cuda() * 2. - 1.
 
                 generated_sound = generate_from(
                     wavenet, n_sample, init
