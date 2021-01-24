@@ -30,9 +30,9 @@ def generate_from(
 
 
 if __name__ == '__main__':
-    wavenet = WaveNet(4, 9, 1, 32, 256)
+    wavenet = WaveNet(4, 9, 1, 32, 256).cuda()
 
-    n_sample = 100
+    n_sample = 16000
     init = th.ones(1)
 
     gen = generate_from(wavenet, n_sample, init)

@@ -24,10 +24,7 @@ def mu_encode(x: th.Tensor, mu: int) -> th.Tensor:
 
 
 def to_wav(raw_audio: th.Tensor, sample_rate: int, out_file: str) -> None:
-    sf.write(
-        out_file, raw_audio,
-        sample_rate, subtype="PCM_16"
-    )
+    sf.write(out_file, raw_audio, sample_rate)
 
 
 def _get_sample_number(
