@@ -130,3 +130,6 @@ dmypy.json
 
 # res
 res/
+
+# JetBrains IDE
+.idea/
