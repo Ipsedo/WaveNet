@@ -125,7 +125,7 @@ class WaveNet(nn.Module):
         out = th.relu(out)
         out = self.__conv2(out)
 
-        return out.permute(0, 2, 1)
+        return out
 
     @property
     def n_class(self) -> int:
