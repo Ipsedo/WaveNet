@@ -1,6 +1,6 @@
 import torch as th
 from networks import WaveNet
-from audio import de_quantize, to_wav
+from audio import de_quantize, to_wav, mu_encode, mu_decode
 
 from tqdm import tqdm
 
@@ -17,7 +17,7 @@ def generate_from(
         f"actual {initial_sample.size(0)} < {n_sample}"
 
     generated_raw = th.zeros(initial_sample.size(0)).to(initial_sample.device)
-    generated_raw[:initial_sample.size(0)] = initial_sample
+    generated_raw[:initial_sample.size(0)] = mu_encode(initial_sample, model.n_class)
     generated_raw = generated_raw.unsqueeze(0).unsqueeze(0)
 
     for sample_idx in tqdm(range(n_sample - initial_sample.size(0))):
@@ -32,7 +32,7 @@ def generate_from(
             [generated_raw, dq_o[None, None, None]], dim=-1
         )
 
-    return generated_raw.view(-1).detach()
+    return mu_decode(generated_raw.view(-1).detach(), model.n_class)
 
 
 if __name__ == '__main__':
