@@ -16,15 +16,21 @@ def generate_from(
         f"initial_sample.size(0) must be < n_sample, " \
         f"actual {initial_sample.size(0)} < {n_sample}"
 
-    generated_raw = th.zeros(n_sample)
+    generated_raw = th.zeros(initial_sample.size(0)).to(initial_sample.device)
     generated_raw[:initial_sample.size(0)] = initial_sample
     generated_raw = generated_raw.unsqueeze(0).unsqueeze(0)
 
-    for sample_idx in tqdm(range(initial_sample.size(0), n_sample)):
-        o = model(generated_raw[:, :, :sample_idx].cuda())
+    for sample_idx in tqdm(range(n_sample - initial_sample.size(0))):
+        o = model(generated_raw)
+
         o = o.permute(0, 2, 1).argmax(-1).squeeze(0)
-        o_i = o[sample_idx - 1]
-        generated_raw[:, :, sample_idx] = de_quantize(o_i, model.n_class)
+        o = o[sample_idx]
+
+        dq_o = de_quantize(o, model.n_class)
+
+        generated_raw = th.cat(
+            [generated_raw, dq_o[None, None, None]], dim=-1
+        )
 
     return generated_raw.view(-1).detach()
 
@@ -32,10 +38,10 @@ def generate_from(
 if __name__ == '__main__':
     wavenet = WaveNet(4, 9, 1, 32, 256).cuda()
 
-    n_sample = 16000
-    init = th.ones(1)
+    n_sample = 10
+    init = th.ones(2).cuda()
 
-    gen = generate_from(wavenet, n_sample, init)
+    gen = generate_from(wavenet, n_sample, init).cpu()
 
     print(init)
     print(gen)
