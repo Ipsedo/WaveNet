@@ -18,11 +18,13 @@ def main() -> None:
     parser = argparse.ArgumentParser("Train WaveNet")
 
     parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--learning-rate", type=float, default=1e-5)
 
     parser.add_argument("--n-class", type=int, default=128)
     parser.add_argument("--n-block", type=int, default=2)
     parser.add_argument("--n-layer", type=int, default=8)
-    parser.add_argument("--hidden-channel", type=int, default=64)
+    parser.add_argument("--hidden-channel", type=int, default=160)
+    parser.add_argument("--residual-channel", type=int, default=48)
 
     parser.add_argument("--sample-rate", type=int, default=16000)
     parser.add_argument("--sample-length", type=int, default=32000)
@@ -36,18 +38,25 @@ def main() -> None:
     n_class = args.n_class
     n_block = args.n_block
     n_layer = args.n_layer
+    residual_channel = args.residual_channel
     hidden_channel = args.hidden_channel
 
     sample_rate = args.sample_rate
     sample_length = args.sample_length
 
     wavenet = WaveNet(
-        n_block, n_layer, 1, hidden_channel, n_class
+        n_block, n_layer,
+        1, residual_channel, hidden_channel,
+        n_class
     )
 
     wavenet.cuda()
 
-    optim = th.optim.Adam(wavenet.parameters(), lr=1e-4)
+    optim = th.optim.Adam(
+        wavenet.parameters(),
+        lr=args.learning_rate
+    )
+
     criterion = nn.CrossEntropyLoss()
 
     files = glob(args.audio_files)
@@ -62,7 +71,7 @@ def main() -> None:
         data_set, batch_size=args.batch_size, shuffle=True
     )
 
-    nb_epoch = 10
+    nb_epoch = 40
 
     for e in range(nb_epoch):
 
@@ -102,7 +111,7 @@ def main() -> None:
                 to_wav(
                     generated_sound.numpy(),
                     sample_rate,
-                    f"./res/gen.wav"
+                    f"./res/gen_epoch_{e}.wav"
                 )
 
 
