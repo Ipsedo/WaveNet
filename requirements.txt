@@ -1,1 +1,4 @@
+wheel
 torch
+soundfile
+tqdm
