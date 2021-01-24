@@ -11,10 +11,10 @@ from glob import glob
 
 
 def main() -> None:
-    n_class = 256
-    n_block = 2
-    n_layer = 9
-    hidden_channel = 32
+    n_class = 128
+    n_block = 3
+    n_layer = 8
+    hidden_channel = 64
 
     wavenet = WaveNet(
         n_block, n_layer, 1, hidden_channel, n_class
