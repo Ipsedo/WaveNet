@@ -133,3 +133,6 @@ res/
 
 # JetBrains IDE
 .idea/
+
+# MLFlow
+mlruns
