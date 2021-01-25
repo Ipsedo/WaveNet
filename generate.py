@@ -12,15 +12,17 @@ def generate_from(
         f"initial_sample.size() must be length == 1, " \
         f"actual = {len(initial_sample.size())}"
 
-    assert initial_sample.size(0) < n_sample, \
-        f"initial_sample.size(0) must be < n_sample, " \
-        f"actual {initial_sample.size(0)} < {n_sample}"
+    generated_raw = th.zeros(
+        initial_sample.size(0)
+    ).to(initial_sample.device)
 
-    generated_raw = th.zeros(initial_sample.size(0)).to(initial_sample.device)
-    generated_raw[:initial_sample.size(0)] = mu_encode(initial_sample, model.n_class)
+    generated_raw[:initial_sample.size(0)] = mu_encode(
+        initial_sample, model.n_class
+    )
+
     generated_raw = generated_raw.unsqueeze(0).unsqueeze(0)
 
-    for sample_idx in tqdm(range(n_sample - initial_sample.size(0))):
+    for sample_idx in tqdm(range(n_sample)):
         o = model(generated_raw)
 
         o = o.permute(0, 2, 1).argmax(-1).squeeze(0)
