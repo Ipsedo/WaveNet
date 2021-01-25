@@ -2,3 +2,4 @@ wheel
 torch
 soundfile
 tqdm
+mlflow
