@@ -102,7 +102,6 @@ def main() -> None:
 
     # set mlflow params
     mlflow.log_params({
-        "audio_files": files,
         "n_class": n_class,
         "n_block": n_block,
         "n_layer": n_layer,
