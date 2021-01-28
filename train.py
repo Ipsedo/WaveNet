@@ -97,7 +97,9 @@ def main() -> None:
     )
 
     data_loader = DataLoader(
-        data_set, batch_size=batch_size, shuffle=True
+        data_set,
+        batch_size=batch_size,
+        shuffle=True
     )
 
     # set mlflow params
