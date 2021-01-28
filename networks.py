@@ -1,11 +1,12 @@
 import torch as th
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class CausalConvolution(nn.Module):
     def __init__(
             self, in_channels: int, out_channels: int,
-            kernel_size: int, dilation: int = 1, **kwargs
+            kernel_size: int, dilation: int = 1
     ):
         super(CausalConvolution, self).__init__()
 
@@ -14,33 +15,31 @@ class CausalConvolution(nn.Module):
             out_channels,
             kernel_size,
             dilation=dilation,
-            padding=(kernel_size - 1) * dilation,
-            **kwargs
+            padding=0
         )
 
+        self.__padding = (kernel_size - 1) * dilation
+
     def forward(self, x: th.Tensor) -> th.Tensor:
-        out_conv = self.__conv(x)
-        out_pad = out_conv[:, :, :-self.__conv.padding[0]]
-        return out_pad
+        x_padded = F.pad(x, (self.__padding, 0), mode="constant", value=0.)
+        out_conv = self.__conv(x_padded)
+        return out_conv
 
 
 class GatedActivationUnit(nn.Module):
     def __init__(
             self, in_channels: int, out_channels: int,
-            kernel_size: int, dilation: int = 1,
-            **kwargs
+            kernel_size: int, dilation: int = 1
     ):
         super(GatedActivationUnit, self).__init__()
 
         self.__filter_conv = CausalConvolution(
             in_channels, out_channels,
-            kernel_size, dilation=dilation,
-            **kwargs
+            kernel_size, dilation=dilation
         )
         self.__gate_conv = CausalConvolution(
             in_channels, out_channels,
-            kernel_size, dilation=dilation,
-            **kwargs
+            kernel_size, dilation=dilation
         )
 
     def forward(self, x: th.Tensor) -> th.Tensor:
@@ -53,14 +52,13 @@ class GatedActivationUnit(nn.Module):
 class ResidualSkipConnections(nn.Module):
     def __init__(
             self, in_channels: int, out_channels: int,
-            kernel_size: int, dilation: int = 1,
-            **kwargs
+            kernel_size: int, dilation: int = 1
     ):
         super(ResidualSkipConnections, self).__init__()
 
         self.__gated_act_unit = GatedActivationUnit(
             in_channels, out_channels, kernel_size,
-            dilation=dilation, **kwargs
+            dilation=dilation
         )
 
         self.__conv = nn.Conv1d(
@@ -120,9 +118,9 @@ class WaveNet(nn.Module):
         skipped = th.stack(skipped, dim=1)
         skipped = skipped.sum(dim=1)
 
-        out = th.relu(skipped)
+        out = F.relu(skipped)
         out = self.__conv1(out)
-        out = th.relu(out)
+        out = F.relu(out)
         out = self.__conv2(out)
 
         return out
@@ -139,7 +137,10 @@ if __name__ == '__main__':
     x[0, 0, 1] = 1
     # x[0, 0, -1] = 1
 
-    wavenet = WaveNet(4, 10, 1, 32, 10)
+    o = conv_1(x)
+    print(o)
+
+    wavenet = WaveNet(4, 10, 1, 32, 64, 10)
 
     o = wavenet(x)
     print(o.size())
