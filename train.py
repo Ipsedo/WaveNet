@@ -1,4 +1,4 @@
-from audio import WavDataset, to_wav
+from audio import WavDataset, to_wav, read_wav, mu_encode
 from networks import WaveNet
 from generate import generate_from
 
@@ -32,6 +32,7 @@ def main() -> None:
     parser.add_argument("--n-layer", type=int, default=8)
     parser.add_argument("--hidden-channel", type=int, default=160)
     parser.add_argument("--residual-channel", type=int, default=48)
+    parser.add_argument("--skip-channel", type=int, default=100)
 
     parser.add_argument("--sample-rate", type=int, default=16000)
     parser.add_argument("--sample-length", type=int, default=32000)
@@ -64,6 +65,7 @@ def main() -> None:
     n_layer = args.n_layer
     residual_channel = args.residual_channel
     hidden_channel = args.hidden_channel
+    skip_channel = args.skip_channel
 
     nb_epoch = args.nb_epoch
     learning_rate = args.learning_rate
@@ -76,7 +78,7 @@ def main() -> None:
     wavenet = WaveNet(
         n_block, n_layer,
         1, residual_channel, hidden_channel,
-        n_class
+        skip_channel, n_class
     )
 
     wavenet.cuda()
@@ -156,7 +158,9 @@ def main() -> None:
         if args.gen_sec > 0.:
             with th.no_grad():
                 n_sample = int(sample_rate * args.gen_sec)
-                init = th.rand(4096).cuda() * 2. - 1.
+                init = th.rand(1).cuda() * 2. - 1.
+                #init = read_wav(files[0], sample_rate).mean(dim=-1).cuda()
+                #init = mu_encode(init[-4096:], n_class)
 
                 generated_sound = generate_from(
                     wavenet, n_sample, init

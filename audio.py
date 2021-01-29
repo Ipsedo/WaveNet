@@ -53,7 +53,7 @@ def _get_sample_number(
     return sample_nb
 
 
-def _read_wav(wav_path: str, sample_rate: int) -> th.Tensor:
+def read_wav(wav_path: str, sample_rate: int) -> th.Tensor:
     raw_audio, curr_sr = sf.read(wav_path)
 
     if curr_sr != sample_rate:
@@ -84,7 +84,7 @@ class WavDataset(th_data.TensorDataset):
         progress = tqdm(wav_paths) if progress_bar else wav_paths
 
         for w_p in progress:
-            raw_audio = _read_wav(w_p, sample_rate)
+            raw_audio = read_wav(w_p, sample_rate)
 
             to_keep = raw_audio.size(0) - \
                       raw_audio.size(0) % (sample_length + 1)

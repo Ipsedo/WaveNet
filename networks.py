@@ -51,35 +51,44 @@ class GatedActivationUnit(nn.Module):
 
 class ResidualSkipConnections(nn.Module):
     def __init__(
-            self, in_channels: int, out_channels: int,
-            kernel_size: int, dilation: int = 1
+            self, in_channels: int, res_channels: int,
+            skip_channels: int, kernel_size: int,
+            dilation: int = 1
     ):
         super(ResidualSkipConnections, self).__init__()
 
         self.__gated_act_unit = GatedActivationUnit(
-            in_channels, out_channels, kernel_size,
+            in_channels, res_channels, kernel_size,
             dilation=dilation
         )
 
-        self.__conv = nn.Conv1d(
-            out_channels, out_channels,
+        self.__skip_conv = nn.Conv1d(
+            res_channels, skip_channels,
+            1, dilation=1, padding=0
+        )
+
+        self.__res_conv = nn.Conv1d(
+            res_channels, res_channels,
             1, dilation=1, padding=0
         )
 
     def forward(self, x: th.Tensor) -> (th.Tensor, th.Tensor):
         out = self.__gated_act_unit(x)
-        out = self.__conv(out)
 
-        residual = out + x
+        out_skip = self.__skip_conv(out)
+        out_res = self.__res_conv(out)
 
-        return out, residual
+        out_res = out_res + x
+
+        return out_skip, out_res
 
 
 class WaveNet(nn.Module):
     def __init__(
             self, num_block: int, num_layer: int,
             in_channels: int, residual_channel: int,
-            hidden_channel: int, n_class: int
+            skip_channel: int, hidden_channel: int,
+            n_class: int
     ):
         super(WaveNet, self).__init__()
 
@@ -93,13 +102,13 @@ class WaveNet(nn.Module):
                     ResidualSkipConnections(
                         in_channels if (b_idx == 0) & (l_idx == 0)
                         else residual_channel,
-                        residual_channel,
+                        residual_channel, skip_channel,
                         2, dilation=2 ** l_idx
                     )
                 )
 
         self.__conv1 = nn.Conv1d(
-            residual_channel, hidden_channel,
+            skip_channel, hidden_channel,
             kernel_size=1, padding=0, dilation=1
         )
 
@@ -133,15 +142,15 @@ class WaveNet(nn.Module):
 if __name__ == '__main__':
     conv_1 = CausalConvolution(1, 1, 2, dilation=2)
 
-    x = th.zeros(1, 1, 10)
-    x[0, 0, 1] = 1
+    data = th.zeros(1, 1, 10)
+    data[0, 0, 1] = 1
     # x[0, 0, -1] = 1
 
-    o = conv_1(x)
+    o = conv_1(data)
     print(o)
 
     wavenet = WaveNet(4, 10, 1, 32, 64, 10)
 
-    o = wavenet(x)
+    o = wavenet(data)
     print(o.size())
     print(o)
